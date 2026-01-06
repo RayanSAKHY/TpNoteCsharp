@@ -12,10 +12,10 @@ namespace TpNoteCSharp.assets
         private string _auteur;
         private DateTime _anneePublication;
         private int _isbn;
-        private string _categorie;
+        private Categorie _categorie;
         private DateTime _dateAjout;
 
-        public Livre(string titre, string auteur, DateTime anneePublication, int isbn, string categorie, DateTime dateAjout)
+        public Livre(string titre, string auteur, DateTime anneePublication, int isbn, Categorie categorie, DateTime dateAjout)
         {
             _titre = titre;
             _auteur = auteur;
@@ -49,7 +49,7 @@ namespace TpNoteCSharp.assets
             set { _isbn = value; }
         }
 
-        public string Categorie
+        public Categorie Categorie
         {
             get { return _categorie; }
             set { _categorie = value; }
