@@ -15,7 +15,7 @@ namespace TpNoteCSharp.assets
         private string _auteur;
         private DateTime _anneePublication;
         private int _isbn;
-        private Categorie _categorie;
+        private string _categorie;
         private DateTime _dateAjout;
 
         // Constructeur sans paramètres requis pour la désérialisation
@@ -23,7 +23,7 @@ namespace TpNoteCSharp.assets
         {
         }
 
-        public Livre(string titre, string auteur, DateTime anneePublication, int isbn, Categorie categorie, DateTime dateAjout)
+        public Livre(string titre, string auteur, DateTime anneePublication, int isbn, string categorie, DateTime dateAjout)
         {
             _titre = titre;
             _auteur = auteur;
@@ -62,7 +62,7 @@ namespace TpNoteCSharp.assets
         }
 
         [XmlElement("Categorie")]
-        public Categorie Categorie
+        public string Categorie
         {
             get { return _categorie; }
             set { _categorie = value; }
@@ -75,5 +75,9 @@ namespace TpNoteCSharp.assets
             set { _dateAjout = value; }
         }
 
+        override public string ToString()
+        {
+            return $"Titre: {_titre}, Auteur: {_auteur}, Année de Publication: {_anneePublication.Year}, ISBN: {_isbn}, Catégorie: {_categorie}, Date d'Ajout: {_dateAjout.ToShortDateString()}";
+        }
     }
 }
