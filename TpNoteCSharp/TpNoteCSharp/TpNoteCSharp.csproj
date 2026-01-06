@@ -49,6 +49,7 @@
   <ItemGroup>
     <Compile Include="assets\Categorie.cs" />
     <Compile Include="assets\Livre.cs" />
+    <Compile Include="SerializationManager.cs" />
     <Compile Include="assets\Utilisateur.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
