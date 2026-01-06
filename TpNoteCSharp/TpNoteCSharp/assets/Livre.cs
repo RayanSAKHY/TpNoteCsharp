@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace TpNoteCSharp.assets
 {
+    [Serializable]
+    [XmlRoot("Livre")]
     internal class Livre
     {
         private string _titre;
@@ -14,6 +17,11 @@ namespace TpNoteCSharp.assets
         private int _isbn;
         private Categorie _categorie;
         private DateTime _dateAjout;
+
+        // Constructeur sans paramètres requis pour la désérialisation
+        public Livre()
+        {
+        }
 
         public Livre(string titre, string auteur, DateTime anneePublication, int isbn, Categorie categorie, DateTime dateAjout)
         {
@@ -25,36 +33,42 @@ namespace TpNoteCSharp.assets
             _dateAjout = dateAjout;
         }
 
+        [XmlElement("Titre")]
         public string Titre
         {
             get { return _titre; }
             set { _titre = value; }
         }
 
+        [XmlElement("Auteur")]
         public string Auteur
         {
             get { return _auteur; }
             set { _auteur = value; }
         }
 
+        [XmlElement("AnneePublication")]
         public DateTime AnneePublication
         {
             get { return _anneePublication; }
             set { _anneePublication = value; }
         }
 
+        [XmlElement("ISBN")]
         public int ISBN
         {
             get { return _isbn; }
             set { _isbn = value; }
         }
 
+        [XmlElement("Categorie")]
         public Categorie Categorie
         {
             get { return _categorie; }
             set { _categorie = value; }
         }
 
+        [XmlElement("DateAjout")]
         public DateTime DateAjout
         {
             get { return _dateAjout; }
