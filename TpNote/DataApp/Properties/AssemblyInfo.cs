@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("TpNoteCSharp")]
+[assembly: AssemblyTitle("DataApp")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("TpNoteCSharp")]
+[assembly: AssemblyProduct("DataApp")]
 [assembly: AssemblyCopyright("Copyright ©  2026")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("a530dc33-a20e-41a8-b674-9c9c8d601d0e")]
+[assembly: Guid("6969cbc6-8602-4c7a-96e4-a3d3e8592066")]
 
 // Version information for an assembly consists of the following four values:
 //

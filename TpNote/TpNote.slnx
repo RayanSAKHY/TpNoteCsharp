@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="App/App.csproj" Id="e3cb94f9-7971-40bc-8588-bc6e020d35bb" />
+  <Project Path="DataApp/DataApp.csproj" Id="6969cbc6-8602-4c7a-96e4-a3d3e8592066" />
+  <Project Path="SerializationApp/SerializationApp.csproj" Id="a904aa59-7d83-4a28-809b-b42429bf34e7" />
+</Solution>

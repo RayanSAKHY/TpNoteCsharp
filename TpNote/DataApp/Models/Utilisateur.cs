@@ -5,11 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
-namespace TpNoteCSharp.assets
+namespace DataApp
 {
     [Serializable]
     [XmlRoot("Utilisateur")]
-    internal class Utilisateur
+    public class Utilisateur
     {
         private string _nom;
         private string _prenom;

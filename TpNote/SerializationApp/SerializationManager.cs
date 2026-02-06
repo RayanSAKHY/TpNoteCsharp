@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml.Serialization;
 
-namespace TpNoteCSharp.assets
+namespace SerializationApp
 {
-    internal static class SerializationManager<T>
+    public static class SerializationManager<T>
     {
         private static readonly object _sync = new object();
 

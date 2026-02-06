@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TpNoteCSharp.assets
+namespace DataApp
 {
-    internal class Categorie
+    public class Categorie
     {
         private string _nom;
         private Livre[] _livres;
