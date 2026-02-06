@@ -1,22 +1,58 @@
-﻿using System;
+﻿// App/PathManager.cs
+using System;
 using System.IO;
 
 namespace App
 {
     internal static class PathManager
     {
-        public static string GetLibraryFolder()
+        /// <summary>
+        ///     Remonte depuis le dossier d'exécution jusqu'à trouver un .sln (racine solution).
+        /// </summary>
+        public static string GetSolutionRootOrBase()
         {
-            string root = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            string folder = Path.Combine(root, "TpNoteCSharp","Bibliotheque");
-            if (!Directory.Exists(folder))
-                Directory.CreateDirectory(folder);
+            var dir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
+            while (dir != null)
+            {
+                var sln = Array.Find(dir.GetFiles("*.sln"), _ => true);
+                if (sln != null) return dir.FullName;
+                dir = dir.Parent;
+            }
+            return AppDomain.CurrentDomain.BaseDirectory;
+        }
+        /// <summary>
+        ///     …/TpNoteCSharp/Biblioteque
+        /// </summary>
+        public static string GetLibraryRoot()
+        {
+            string root = GetSolutionRootOrBase();
+            string folder = Path.Combine(root, "Bibliotheque");
+            Directory.CreateDirectory(folder);
             return folder;
         }
 
-        public static string CombineWithFolder(string fileName)
+        public static string Sanitize(string name)
         {
-            return Path.Combine(GetLibraryFolder(), fileName);
+            if (string.IsNullOrWhiteSpace(name)) return "unknown";
+            foreach (var c in Path.GetInvalidFileNameChars())
+                name = name.Replace(c, '_');
+            return name.Trim();
         }
+        /// <summary>
+        ///     …/TpNoteCSharp/Biblioteque/&lt;username&gt;
+        /// </summary>
+        public static string GetUserFolder(string username)
+        {
+            string user = Sanitize(username);
+            string folder = Path.Combine(GetLibraryRoot(), user);
+            Directory.CreateDirectory(folder);
+            return folder;
+        }
+
+        public static string GetUserProfilePath(string username)
+            => Path.Combine(GetUserFolder(username), "user.xml");
+
+        public static string GetUserBooksPath(string username, string extension /* .xml | .bin */)
+            => Path.Combine(GetUserFolder(username), "livres" + extension);
     }
 }
