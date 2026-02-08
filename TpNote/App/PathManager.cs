@@ -39,21 +39,34 @@ namespace App
                 name = name.Replace(c, '_');
             return name.Trim();
         }
+
         /// <summary>
+        ///     Returns the path for the user folder WITHOUT creating it.
         ///     …/TpNoteCSharp/Biblioteque/&lt;username&gt;
         /// </summary>
-        public static string GetUserFolder(string username)
+        public static string GetUserFolderPath(string username)
         {
             string user = Sanitize(username);
             string folder = Path.Combine(GetLibraryRoot(), user);
+            return folder;
+        }
+
+        /// <summary>
+        ///     Returns the path for the user folder and ensures it exists.
+        /// </summary>
+        public static string GetUserFolder(string username)
+        {
+            string folder = GetUserFolderPath(username);
             Directory.CreateDirectory(folder);
             return folder;
         }
 
+        // NOTE: these path helpers now use the non-creating GetUserFolderPath
+        // so read/load operations do not cause creation of the folder.
         public static string GetUserProfilePath(string username)
-            => Path.Combine(GetUserFolder(username), "user.xml");
+            => Path.Combine(GetUserFolderPath(username), "user.xml");
 
         public static string GetUserBooksPath(string username, string extension /* .xml | .bin */)
-            => Path.Combine(GetUserFolder(username), "livres" + extension);
+            => Path.Combine(GetUserFolderPath(username), "livres" + extension);
     }
 }
