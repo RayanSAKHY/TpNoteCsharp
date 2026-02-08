@@ -20,20 +20,28 @@ namespace App
         }
 
         public List<Livre> getLivres() => _livres;
-        public void setLivres(List<Livre> livres) => _livres = livres;
         private string UserFolder => PathManager.GetUserFolder(_username);
         private string ProfilePath => PathManager.GetUserProfilePath(_username);
         private string BooksPath(ISerializer ser) => PathManager.GetUserBooksPath(_username, ser.DefaultExtension);
 
         // --- Profil utilisateur : XML unitaire ---
-        public void SaveProfile(Utilisateur user) => SingleXmlSerializer.Save(ProfilePath, user);
+        public void SaveProfile(Utilisateur user)
+        {
+            // Ensure directory exists before saving
+            PathManager.GetUserFolder(_username); // creates folder if needed
+            SingleXmlSerializer.Save(ProfilePath, user);
+        }
         public Utilisateur LoadProfile() => SingleXmlSerializer.Load<Utilisateur>(ProfilePath);
 
         // --- Livres : via Factory (XML/Binaire) ---
         public void SaveBooks(IEnumerable<Livre> livres, SerializationFormat format)
         {
             var ser = SerializerFactory.Create(format);
-            ser.Save(BooksPath(ser), new List<Livre>(livres));
+            var path = BooksPath(ser);
+            var dir = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(dir))
+                Directory.CreateDirectory(dir);
+            ser.Save(path, new List<Livre>(livres));
         }
 
         public List<Livre> LoadBooks(SerializationFormat format)

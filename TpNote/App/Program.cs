@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using SerializationApp;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -72,23 +73,23 @@ namespace App
             return user;
         }
 
-        private static bool LoginFlow(out UserRepository repo, out Utilisateur user)
+        private static bool LoginFlow(out UserRepository repo, out Utilisateur user, out string attemptedUser)
         {
             repo = null; user = null;
-
-            string u = Ask("Username : ");
+            int nbEssai = 0;
+            attemptedUser = Ask("Username : ");
             string p = Ask("Mot de passe : ");
 
-            var r = new UserRepository(u);
+            var r = new UserRepository(attemptedUser);
             var existing = r.LoadProfile();
             if (existing == null)
             {
                 Console.WriteLine("Utilisateur inconnu.");
                 return false;
             }
-            if (!string.Equals(existing.MotDePasse, p, StringComparison.Ordinal))
+            if (!string.Equals(existing.MotDePasse, p, StringComparison.Ordinal) )
             {
-                Console.WriteLine("Mot de passe incorrect (comparaison en clair, provisoire).");
+                Console.WriteLine("Identifiant/mot de passe incorrect. Veuillez réessayerr.");
                 return false;
             }
 
@@ -147,6 +148,47 @@ namespace App
             }
         }
 
+
+        private static void DeleteUserFolder(string username)
+        {
+            try
+            {
+                // Use the non-creating path to avoid creating the folder when attempting to delete
+                string userFolder = PathManager.GetUserFolderPath(username);
+
+                // Sécurité : ne supprime pas en dehors de la racine Bibliotheque
+                string root = PathManager.GetLibraryRoot();
+                string fullFolder = Path.GetFullPath(userFolder)
+                                       .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                string fullRoot = Path.GetFullPath(root)
+                                     .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+                if (!fullFolder.StartsWith(fullRoot, StringComparison.OrdinalIgnoreCase))
+                {
+                    Console.WriteLine("Suppression refusée : chemin hors de la bibliothèque.");
+                    return;
+                }
+
+                if (!Directory.Exists(fullFolder))
+                {
+                    Console.WriteLine("Aucun dossier à supprimer pour cet utilisateur.");
+                    return;
+                }
+
+                // Enlève l’attribut ReadOnly sur tous les fichiers
+                foreach (var file in Directory.GetFiles(fullFolder, "*", SearchOption.AllDirectories))
+                {
+                    try { File.SetAttributes(file, FileAttributes.Normal); } catch { /* ignore */ }
+                }
+
+                Directory.Delete(fullFolder, recursive: true);
+                Console.WriteLine($"Dossier utilisateur supprimé : {fullFolder}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Erreur lors de la suppression du dossier utilisateur : " + ex.Message);
+            }
+        }
         public static void RunGui() 
         {
             Application.EnableVisualStyles();
@@ -156,6 +198,7 @@ namespace App
 
         public static void RunConsole()
         {
+            int nbEssai = 3;
             while (true)
             {
                 Console.WriteLine("\n--- MENU ---");
@@ -174,11 +217,23 @@ namespace App
                         break;
 
                     case "2":
-                        if (LoginFlow(out var repo, out var logged))
+                        if (LoginFlow(out var repo, out var logged,out var attemptedUser))
                         {
+                            nbEssai = 3;
                             BooksSubmenu(repo, logged.Username);
                         }
-                        break;
+                        else
+                        {
+                            nbEssai--;
+                            Console.WriteLine("Nombre d'essai restant : " + nbEssai);
+                            if (nbEssai <=0)
+                            {
+                                Console.WriteLine("Trop d'essais infructueux. Supression des fichiers associé.");
+                                DeleteUserFolder(attemptedUser);
+                                nbEssai = 3;
+                            }
+                        }
+                    break;
 
                     default:
                         Console.WriteLine("Choix inconnu.");
@@ -193,7 +248,7 @@ namespace App
 
             ILoggerFactory factory = factory = LoggerFactory.Create(builder => builder.AddConsole()); ;
             ILogger logger = factory.CreateLogger("Program");
-            logger.LogInformation("Hello World! Logging is {Description}.", "fun");
+            //logger.LogInformation("Hello World! Logging is {Description}.", "fun");
 
             Console.WriteLine("\n--- MENU ---");
             Console.WriteLine("1) Interface graphique");
