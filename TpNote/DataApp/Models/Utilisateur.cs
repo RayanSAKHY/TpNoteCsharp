@@ -7,6 +7,10 @@ using System.Xml.Serialization;
 
 namespace DataApp
 {
+    /// <summary>
+    /// Représente un utilisateur de la bibliothèque.
+    /// Classe sérialisable en XML pour stocker le profil utilisateur.
+    /// </summary>
     [Serializable]
     [XmlRoot("Utilisateur")]
     public class Utilisateur
@@ -19,11 +23,23 @@ namespace DataApp
         private string _username;
         private string _password;
 
-        // Constructeur sans paramètres requis pour la désérialisation
+        /// <summary>
+        /// Constructeur sans paramètres requis pour la désérialisation.
+        /// </summary>
         public Utilisateur()
         {
         }
 
+        /// <summary>
+        /// Constructeur complet utilisé lors de la création d'un profil.
+        /// </summary>
+        /// <param name="username">Nom d'utilisateur.</param>
+        /// <param name="motDePasse">Mot de passe (stocké tel quel ici pour le TP).</param>
+        /// <param name="nom">Nom de famille.</param>
+        /// <param name="prenom">Prénom.</param>
+        /// <param name="email">Adresse e‑mail.</param>
+        /// <param name="dateInscription">Date d'inscription.</param>
+        /// <param name="livresEmpruntes">Tableau des livres empruntés.</param>
         public Utilisateur(string username, string motDePasse, string nom, string prenom, string email, DateTime dateInscription, Livre[] livresEmpruntes)
         {
             _username = username;
@@ -35,20 +51,29 @@ namespace DataApp
             _livresEmpruntes = livresEmpruntes;
         }
 
-        [XmlElement("Username")] 
-        public string Username 
-        { 
-            get => _username; 
-            set => _username = value; 
-        }
-        
-        [XmlElement("MotDePasse")]
-        public string MotDePasse        
-        {           
-            get => _password; 
-            set => _password = value;        
+        /// <summary>
+        /// Nom d'utilisateur (clé logique pour le profil).
+        /// </summary>
+        [XmlElement("Username")]
+        public string Username
+        {
+            get => _username;
+            set => _username = value;
         }
 
+        /// <summary>
+        /// Mot de passe (dans ce TP il est stocké en clair dans l'objet ; attention en production).
+        /// </summary>
+        [XmlElement("MotDePasse")]
+        public string MotDePasse
+        {
+            get => _password;
+            set => _password = value;
+        }
+
+        /// <summary>
+        /// Nom de famille.
+        /// </summary>
         [XmlElement("Nom")]
         public string Nom
         {
@@ -56,6 +81,9 @@ namespace DataApp
             set { _nom = value; }
         }
 
+        /// <summary>
+        /// Prénom.
+        /// </summary>
         [XmlElement("Prenom")]
         public string Prenom
         {
@@ -63,6 +91,9 @@ namespace DataApp
             set { _prenom = value; }
         }
 
+        /// <summary>
+        /// Adresse e‑mail.
+        /// </summary>
         [XmlElement("Email")]
         public string Email
         {
@@ -70,6 +101,9 @@ namespace DataApp
             set { _email = value; }
         }
 
+        /// <summary>
+        /// Date d'inscription de l'utilisateur.
+        /// </summary>
         [XmlElement("DateInscription")]
         public DateTime DateInscription
         {
@@ -77,6 +111,9 @@ namespace DataApp
             set { _dateInscription = value; }
         }
 
+        /// <summary>
+        /// Liste des livres empruntés (tableau sérialisé en XML).
+        /// </summary>
         [XmlArray("LivresEmpruntes")]
         [XmlArrayItem("Livre")]
         public Livre[] LivresEmpruntes
