@@ -27,17 +27,12 @@ namespace DataApp
         public Utilisateur(string username, string motDePasse, string nom, string prenom, string email, DateTime dateInscription, Livre[] livresEmpruntes)
         {
             _username = username;
-            _password = _password;
+            _password = motDePasse;
             _nom = nom;
             _prenom = prenom;
             _email = email;
             _dateInscription = dateInscription;
             _livresEmpruntes = livresEmpruntes;
-        }
-
-        public Utilisateur(string username, string motDePasse,string nom, string prenom,string email)
-        {
-            this.Utilisateur(username, motDePasse, nom, prenom, email, DateTime.Now, new Livre[0]);
         }
 
         [XmlElement("Username")] 
@@ -50,8 +45,8 @@ namespace DataApp
         [XmlElement("MotDePasse")]
         public string MotDePasse        
         {           
-            get => _motDePasse; 
-            set => _motDePasse = value;        
+            get => _password; 
+            set => _password = value;        
         }
 
         [XmlElement("Nom")]
