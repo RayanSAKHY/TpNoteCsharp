@@ -1,13 +1,10 @@
 # Documentation — Projet Bibliotheque
 
-But : expliquer rapidement ce que j'ai fait et comment utiliser la partie chiffrement / gestion d'erreurs,
-sans modifier le code source (juste docs et suggestions de commentaires).
-
 ## Résumé rapide
-- Les fichiers utilisateur / livres sont maintenant sauvegardés chiffrés (AES-256) si on fournit une clé.
+- Les fichiers utilisateur / livres sont sauvegardés chiffrés (AES-256) si on fournit une clé.
 - Si l'utilisateur ne donne pas de clé, le programme utilise le SID Windows courant comme clé dérivée.
 - Format de fichier chiffré : header `ENCF` + longueur du sel + sel, puis données AES-CBC+PKCS7.
-- Lors du chargement, si la décryption échoue, l'application propose à l'utilisateur de réessayer (prompt).
+- Lors du chargement, si la décryption échoue, l'application propose à l'utilisateur de réessayer.
 - Les erreurs de décryptage sont catégorisées : `FileNotFound`, `InvalidFormat`, `WrongKeyOrCorrupt`, `OtherError`.
 - Lecture (login) n'entraîne pas la création automatique du dossier utilisateur — création uniquement à la sauvegarde.
 
@@ -16,7 +13,7 @@ sans modifier le code source (juste docs et suggestions de commentaires).
   - Contient la logique AES + PBKDF2. Fonctions utiles :
     - `EncryptStreamToFile(Stream, path, password)` — chiffre et écrit le fichier.
     - `TryDecryptFileToMemoryStream(path, password, out MemoryStream, out string)` — tente de déchiffrer et retourne un code d'erreur si échec.
-    - `EffectivePassword(password)` — si `password` vide, retourne le SID Windows (fallback).
+    - `EffectivePassword(password)` — si `password` vide, retourne le SID Windows.
 - `SerializationApp/EncryptedXmlSerializer.cs` et `SerializationApp/EncryptedBinarySerializer.cs`  
   - Sérialisent en mémoire puis utilisent `CryptoHelper` pour écrire/charger.
   - Fournissent `TryLoad<T>(...)` qui retourne une erreur lisible.
@@ -48,20 +45,11 @@ sans modifier le code source (juste docs et suggestions de commentaires).
 - Les exceptions non liées à la cryptographie (ex: IO, permission) sont remontées et affichées lors des opérations de sauvegarde.
 
 ## Remarques pédagogiques / sécurité
-- Utilisation de `BinaryFormatter` — acceptable ici pour .NET Framework 4.7.2 (projet pédagogique), mais déconseillé en production.
-- Les clés sont lues en clair depuis la console (`Console.ReadLine`). Pour plus de sécurité, utiliser `Console.ReadKey` / masquage.
+- Les clés sont lues en clair depuis la console.
 - Le choix du SID comme clé par défaut est pratique pour uni-utilisateur sur la même machine, mais rend les fichiers lisibles par toute session ayant le même SID (donc considérer la sécurité selon le contexte).
-- Paramètres PBKDF2 : 100000 itérations (équilibré pour perf/sécurité en 2026). On peut ajuster.
-
-## Suppression des dossiers vides créés auparavant
-Si des dossiers vides ont été créés par le comportement antérieur :
-- Supprimez-les manuellement (Explorateur ou `rmdir /s /q <folder>`).
-- Ou utilisez la commande "Supprimer" dans l'application (`DeleteUserFolder`) — la méthode utilise `GetUserFolderPath` et ne recrée pas le dossier juste pour vérifier.
 
 ## Propositions d'amélioration (futures)
 - Masquer la saisie de la clé dans la console.
 - Ajout d'un mécanisme d'index/fichier manifeste non chiffré pour savoir si un user a un profil sans tenter de décryptage.
-- En GUI : proposer un sélecteur de fichier / clé persistée de façon sécurisée (DPAPI).
-- Remplacer `BinaryFormatter` par `DataContractSerializer` ou `System.Text.Json` avec conversion binaire sécurisée.
 
 --
