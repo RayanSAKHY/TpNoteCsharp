@@ -49,6 +49,7 @@
     <Compile Include="SerializationFormat.cs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SerializeFactory.cs" />
+    <Compile Include="SingleXmlSerializer.cs" />
     <Compile Include="XmlSerializeManager.cs" />
   </ItemGroup>
   <ItemGroup>
