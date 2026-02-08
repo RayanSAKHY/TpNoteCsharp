@@ -1,55 +1,53 @@
-# Documentation — Projet Bibliotheque
+# Documentation â€” Projet Bibliotheque
 
-## Résumé rapide
-- Les fichiers utilisateur / livres sont sauvegardés chiffrés (AES-256) si on fournit une clé.
-- Si l'utilisateur ne donne pas de clé, le programme utilise le SID Windows courant comme clé dérivée.
-- Format de fichier chiffré : header `ENCF` + longueur du sel + sel, puis données AES-CBC+PKCS7.
-- Lors du chargement, si la décryption échoue, l'application propose à l'utilisateur de réessayer.
-- Les erreurs de décryptage sont catégorisées : `FileNotFound`, `InvalidFormat`, `WrongKeyOrCorrupt`, `OtherError`.
-- Lecture (login) n'entraîne pas la création automatique du dossier utilisateur — création uniquement à la sauvegarde.
+## RÃ©sumÃ© rapide
+- Les fichiers utilisateur / livres sont sauvegardÃ©s chiffrÃ©s (AES-256) si on fournit une clÃ©.
+- Si l'utilisateur ne donne pas de clÃ©, le programme utilise le SID Windows courant comme clÃ© dÃ©rivÃ©e.
+- Format de fichier chiffrÃ© : header `ENCF` + longueur du sel + sel, puis donnÃ©es AES-CBC+PKCS7.
+- Lors du chargement, si la dÃ©cryption Ã©choue, l'application propose Ã  l'utilisateur de rÃ©essayer.
+- Les erreurs de dÃ©cryptage sont catÃ©gorisÃ©es : `FileNotFound`, `InvalidFormat`, `WrongKeyOrCorrupt`, `OtherError`.
+- Lecture (login) n'entraÃ®ne pas la crÃ©ation automatique du dossier utilisateur â€” crÃ©ation uniquement Ã  la sauvegarde.
 
-## Fichiers importants (où regarder)
+## Fichiers importants (oÃ¹ regarder)
 - `SerializationApp/CryptoHelper.cs`  
   - Contient la logique AES + PBKDF2. Fonctions utiles :
-    - `EncryptStreamToFile(Stream, path, password)` — chiffre et écrit le fichier.
-    - `TryDecryptFileToMemoryStream(path, password, out MemoryStream, out string)` — tente de déchiffrer et retourne un code d'erreur si échec.
-    - `EffectivePassword(password)` — si `password` vide, retourne le SID Windows.
+    - `EncryptStreamToFile(Stream, path, password)` â€” chiffre et Ã©crit le fichier.
+    - `TryDecryptFileToMemoryStream(path, password, out MemoryStream, out string)` â€” tente de dÃ©chiffrer et retourne un code d'erreur si Ã©chec.
+    - `EffectivePassword(password)` â€” si `password` vide, retourne le SID Windows.
 - `SerializationApp/EncryptedXmlSerializer.cs` et `SerializationApp/EncryptedBinarySerializer.cs`  
-  - Sérialisent en mémoire puis utilisent `CryptoHelper` pour écrire/charger.
+  - SÃ©rialisent en mÃ©moire puis utilisent `CryptoHelper` pour Ã©crire/charger.
   - Fournissent `TryLoad<T>(...)` qui retourne une erreur lisible.
 - `App/UserRepository.cs`  
-  - Expose `SaveProfile(..., key)` / `LoadProfile(key)` et `SaveBooks` / `LoadBooks` acceptant la clé.
-  - Si le fichier existe mais ne peut pas être décrypté, une `DecryptionException` est levée pour que l'appelant (UI/Program) propose de réessayer.
+  - Expose `SaveProfile(..., key)` / `LoadProfile(key)` et `SaveBooks` / `LoadBooks` acceptant la clÃ©.
+  - Si le fichier existe mais ne peut pas Ãªtre dÃ©cryptÃ©, une `DecryptionException` est levÃ©e pour que l'appelant (UI/Program) propose de rÃ©essayer.
 - `App/Program.cs`  
-  - Flux console : à la création / login / save / load, l'utilisateur est invité à fournir une clé. S'il y a une erreur de décryptage on propose de réessayer.
+  - Flux console : Ã  la crÃ©ation / login / save / load, l'utilisateur est invitÃ© Ã  fournir une clÃ©. S'il y a une erreur de dÃ©cryptage on propose de rÃ©essayer.
 - `App/PathManager.cs`  
-  - `GetUserFolderPath(username)` retourne le chemin SANS créer le dossier (utile pour tests / suppression).
-  - `GetUserFolder(username)` crée le dossier (utilisé avant sauvegarde).
+  - `GetUserFolderPath(username)` retourne le chemin SANS crÃ©er le dossier (utile pour tests / suppression).
+  - `GetUserFolder(username)` crÃ©e le dossier (utilisÃ© avant sauvegarde).
 - `App/Diagnostics.cs`  
-  - Outils de debug pour vérifier droits, écriture, ACL, etc.
+  - Outils de debug pour vÃ©rifier droits, Ã©criture, ACL, etc.
 
-## Utilisation côté utilisateur (console)
-- Créer un compte :
-  - Le programme demande un username / mot de passe / email ... puis demande une clé de chiffrement (optionnelle).
-  - Si la clé est vide, le SID Windows est utilisé automatiquement.
+## Utilisation cÃ´tÃ© utilisateur (console)
+- CrÃ©er un compte :
+  - Le programme demande un username / mot de passe / email ... puis demande une clÃ© de chiffrement (optionnelle).
+  - Si la clÃ© est vide, le SID Windows est utilisÃ© automatiquement.
 - Se connecter :
-  - On entre username + mot de passe puis la clé (vide utilisera SID).
-  - Si le fichier de profil existe mais la clé est incorrecte, on est invité à réessayer ou annuler.
+  - On entre username + mot de passe puis la clÃ© (vide utilisera SID).
+  - Si le fichier de profil existe mais la clÃ© est incorrecte, on est invitÃ© Ã  rÃ©essayer ou annuler.
 - Sauvegarder / Charger livres :
-  - Idem : l'app demande la clé pour chiffrer/déchiffrer.
-  - En cas d'erreur de décryptage, on propose de retenter.
+  - Idem : l'app demande la clÃ© pour chiffrer/dÃ©chiffrer.
+  - En cas d'erreur de dÃ©cryptage, on propose de retenter.
 
 ## Comportement sur erreurs
-- Les erreurs de chiffrement/déchiffrement sont capturées. L'application affiche un message et propose de réessayer.
-- Si on choisit de ne pas réessayer lors d'un login, l'utilisateur est traité comme "inconnu".
-- Les exceptions non liées à la cryptographie (ex: IO, permission) sont remontées et affichées lors des opérations de sauvegarde.
+- Les erreurs de chiffrement/dÃ©chiffrement sont capturÃ©es. L'application affiche un message et propose de rÃ©essayer.
+- Si on choisit de ne pas rÃ©essayer lors d'un login, l'utilisateur est traitÃ© comme "inconnu".
+- Les exceptions non liÃ©es Ã  la cryptographie (ex: IO, permission) sont remontÃ©es et affichÃ©es lors des opÃ©rations de sauvegarde.
 
-## Remarques pédagogiques / sécurité
-- Les clés sont lues en clair depuis la console.
-- Le choix du SID comme clé par défaut est pratique pour uni-utilisateur sur la même machine, mais rend les fichiers lisibles par toute session ayant le même SID (donc considérer la sécurité selon le contexte).
+## Remarques pÃ©dagogiques / sÃ©curitÃ©
+- Les clÃ©s sont lues en clair depuis la console.
+- Le choix du SID comme clÃ© par dÃ©faut est pratique pour uni-utilisateur sur la mÃªme machine, mais rend les fichiers lisibles par toute session ayant le mÃªme SID (donc considÃ©rer la sÃ©curitÃ© selon le contexte).
 
-## Propositions d'amélioration (futures)
-- Masquer la saisie de la clé dans la console.
-- Ajout d'un mécanisme d'index/fichier manifeste non chiffré pour savoir si un user a un profil sans tenter de décryptage.
-
---
+## Propositions d'amÃ©lioration (futures)
+- Masquer la saisie de la clÃ© dans la console.
+- Ajout d'un mÃ©canisme d'index/fichier manifeste non chiffrÃ© pour savoir si un user a un profil sans tenter de dÃ©cryptage.
