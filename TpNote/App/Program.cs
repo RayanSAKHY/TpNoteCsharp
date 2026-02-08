@@ -14,20 +14,6 @@ namespace App
 {
     internal static class Program
     {
-        private static readonly List<Livre> _livres = new List<Livre>();
-
-        private static void Menu()
-        {
-            Console.WriteLine("\n--- BIBLIOTHEQUE (Demo Serialization) ---");
-            Console.WriteLine("1) Ajouter un livre");
-            Console.WriteLine("2) Lister les livres");
-            Console.WriteLine("3) Sauvegarder (XML)");
-            Console.WriteLine("4) Charger (XML)");
-            Console.WriteLine("5) Sauvegarder (Binaire)");
-            Console.WriteLine("6) Charger (Binaire)");
-            Console.WriteLine("0) Quitter");
-            Console.Write("> Choix: ");
-        }
 
         private static string Ask(string label)
         {
@@ -35,24 +21,28 @@ namespace App
             return Console.ReadLine();
         }
 
-        private static void AddBook()
+        private static void AddBook(List<Livre> _livres)
         {
             string titre = Ask("Titre: ");
             string auteur = Ask("Auteur: ");
             int isbn;
             while (!int.TryParse(Ask("ISBN (int): "), out isbn))
                 Console.WriteLine("ISBN invalide. Reessaie.");
+
             string categorie = Ask("Categorie: ");
             DateTime anneePub;
             while (!DateTime.TryParse(Ask("Date publication (yyyy-mm-dd): "), out anneePub))
                 Console.WriteLine("Date invalide. Reessaie.");
 
             var livre = new Livre(titre, auteur, anneePub, isbn, categorie, DateTime.Now);
+
+            // 3) Ajouter à la liste en mémoire
             _livres.Add(livre);
+
             Console.WriteLine("Livre ajouté.");
         }
 
-        private static void ListBooks()
+        private static void ListBooks(List<Livre> _livres)
         {
             if (_livres.Count == 0)
             {
@@ -64,57 +54,105 @@ namespace App
                 Console.WriteLine($"[{i + 1}] {_livres[i]}");
             }
         }
-
-        private static void Save(SerializationFormat format)
+     
+        private static Utilisateur CreateUserFlow()
         {
-            var serializer = SerializerFactory.Create(format);
-            string fileName = "livres" + serializer.DefaultExtension;
-            string path = PathManager.CombineWithFolder(fileName);
-            serializer.Save(path, _livres);
-            Console.WriteLine($"Sauvegardé: {path}");
+            string u = Ask("Username : ");
+            string p = Ask("Mot de passe (provisoire, en clair) : ");
+            string nom = Ask("Nom : ");
+            string prenom = Ask("Prenom : ");
+            string email = Ask("Email : ");
+
+            var user = new Utilisateur(u, p, nom, prenom, email, DateTime.Now, new Livre[0]);
+            var repo = new UserRepository(user.Username);
+            repo.SaveProfile(user);
+
+            Console.WriteLine($"Utilisateur '{user.Username}' créé et sauvegardé dans :");
+            Console.WriteLine("  " + PathManager.GetUserProfilePath(user.Username));
+            return user;
         }
 
-        private static void Load(SerializationFormat format)
+        private static bool LoginFlow(out UserRepository repo, out Utilisateur user)
         {
-            var serializer = SerializerFactory.Create(format);
-            string fileName = "livres" + serializer.DefaultExtension;
-            string path = PathManager.CombineWithFolder(fileName);
-            var loaded = serializer.Load<List<Livre>>(path);
-            if (loaded == null)
+            repo = null; user = null;
+
+            string u = Ask("Username : ");
+            string p = Ask("Mot de passe : ");
+
+            var r = new UserRepository(u);
+            var existing = r.LoadProfile();
+            if (existing == null)
             {
-                Console.WriteLine("Rien chargé (fichier absent ou vide).");
-                return;
+                Console.WriteLine("Utilisateur inconnu.");
+                return false;
             }
-            _livres.Clear();
-            _livres.AddRange(loaded);
-            Console.WriteLine($"Chargé: {path} ( {_livres.Count} livres )");
+            if (!string.Equals(existing.MotDePasse, p, StringComparison.Ordinal))
+            {
+                Console.WriteLine("Mot de passe incorrect (comparaison en clair, provisoire).");
+                return false;
+            }
+
+            repo = r; user = existing;
+            Console.WriteLine("Connecté.");
+            return true;
         }
 
-        private static void Run()
+        private static void BooksSubmenu(UserRepository repo, string username)
         {
+            var livres = repo.getLivres();
+
             while (true)
             {
-                Menu();
-                var choix = Console.ReadLine();
-                switch (choix)
+                Console.WriteLine("\nLivres —\n  1) Ajouter\n  2) Lister\n  3) Save XML\n  4) Load XML\n  5) Save BIN\n  6) Load BIN\n  0) Retour\n");
+                Console.Write("> Choix: ");
+                var sc = Console.ReadLine();
+                if (sc == "0") break;
+
+                switch (sc)
                 {
-                    case "1": AddBook(); break;
-                    case "2": ListBooks(); break;
-                    case "3": Save(SerializationFormat.Xml); break;
-                    case "4": Load(SerializationFormat.Xml); break;
-                    case "5": Save(SerializationFormat.Binary); break;
-                    case "6": Load(SerializationFormat.Binary); break;
-                    case "0": return;
-                    default: Console.WriteLine("Choix inconnu."); break;
+                    case "1":
+                        AddBook(livres);
+                        break;
+
+                    case "2":
+                        ListBooks(livres);
+                        break;
+
+                    case "3":
+                        repo.SaveBooks(livres, SerializationFormat.Xml); 
+                        Console.WriteLine("Sauvegardé (XML) dans : " + 
+                            PathManager.GetUserBooksPath(username, ".xml"));
+                        break;
+
+                    case "4":
+                        livres = repo.LoadBooks(SerializationFormat.Xml); 
+                        Console.WriteLine($"Chargé (XML) : {livres.Count} livre(s).");
+                        break;
+
+                    case "5":
+                        repo.SaveBooks(livres, SerializationFormat.Binary); 
+                        Console.WriteLine("Sauvegardé (BIN) dans : " + 
+                            PathManager.GetUserBooksPath(username, ".bin"));
+                        break;
+
+                    case "6":
+                        livres = repo.LoadBooks(SerializationFormat.Binary); 
+                        Console.WriteLine($"Chargé (BIN) : {livres.Count} livre(s).");
+                        break;
+
+                    default:
+                        Console.WriteLine("Choix inconnu.");
+                        break;
                 }
             }
         }
-    
-    [STAThread]
-        static void Main()
+
+        private static void Main()
         {
+            //var diag = Diagnostics.TestUserFolderCreation("rayan", verbose: true);
+
             ILoggerFactory factory = null;
-            ILogger logger = null; 
+            ILogger logger = null;
 
             try
             {
@@ -126,25 +164,54 @@ namespace App
                 Application.SetCompatibleTextRenderingDefault(false);
 
                 Livre livre = new Livre("Titre Exemple",
-                                      "Auteur Exemple",
-                                      new DateTime(2020, 1, 1),
-                                      1234567890,
-                                      "Science",
-                                      DateTime.Now);
+                                        "Auteur Exemple",
+                                        new DateTime(2020, 1, 1),
+                                        1234567890,
+                                        "Science",
+                                        DateTime.Now);
 
                 if (logger != null)
                     logger.LogInformation("Livre d'exemple: {Livre}", livre.ToString());
 
-                Application.Run(new Form1()); 
+                Application.Run(new Form1());
             }
             finally
             {
                 if (factory != null)
                     factory.Dispose();
             }
+            Console.WriteLine("Racine des données : " + PathManager.GetLibraryRoot());
 
-            Console.WriteLine("Dossier de données: " + PathManager.GetLibraryFolder()); 
-            Run();
+            while (true)
+            {
+                Console.WriteLine("\n--- MENU ---");
+                Console.WriteLine("1) Créer utilisateur");
+                Console.WriteLine("2) Connexion utilisateur");
+                Console.WriteLine("0) Quitter");
+                Console.Write("> Choix: ");
+                var c = Console.ReadLine();
+
+                if (c == "0") break;
+
+                switch (c)
+                {
+                    case "1":
+                        var user = CreateUserFlow();
+                        break;
+
+                    case "2":
+                        if (LoginFlow(out var repo, out var logged))
+                        {
+                            BooksSubmenu(repo, logged.Username);
+                        }
+                        break;
+
+                    default:
+                        Console.WriteLine("Choix inconnu.");
+                        break;
+                }
+            }
+            
         }
     }
 }
