@@ -1,5 +1,4 @@
-﻿// App/PathManager.cs
-using System;
+﻿using System;
 using System.IO;
 
 namespace App
@@ -7,8 +6,10 @@ namespace App
     internal static class PathManager
     {
         /// <summary>
-        ///     Remonte depuis le dossier d'exécution jusqu'à trouver un .sln (racine solution).
+        /// Remonte depuis le dossier d'exécution jusqu'à trouver un .sln (racine solution).
+        /// Retourne le chemin parent du dossier contenant le .sln trouvé.
         /// </summary>
+        /// <returns>Chemin racine ou AppDomain.BaseDirectory si non trouvé.</returns>
         public static string GetSolutionRootOrBase()
         {
             var dir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
@@ -21,9 +22,12 @@ namespace App
             }
             return AppDomain.CurrentDomain.BaseDirectory;
         }
+
         /// <summary>
-        ///     …/TpNoteCSharp/Biblioteque
+        /// Retourne le dossier racine de la bibliothèque (créé s'il n'existe pas).
+        /// Exemple: …/TpNoteCSharp/Bibliotheque
         /// </summary>
+        /// <returns>Chemin du dossier Bibliotheque.</returns>
         public static string GetLibraryRoot()
         {
             string root = GetSolutionRootOrBase();
@@ -32,6 +36,11 @@ namespace App
             return folder;
         }
 
+        /// <summary>
+        /// Sanitize le nom pour en faire un nom de fichier valide (remplace les caractères invalides).
+        /// </summary>
+        /// <param name="name">Nom brut.</param>
+        /// <returns>Nom sanitizé.</returns>
         public static string Sanitize(string name)
         {
             if (string.IsNullOrWhiteSpace(name)) return "unknown";
@@ -41,9 +50,11 @@ namespace App
         }
 
         /// <summary>
-        ///     Returns the path for the user folder WITHOUT creating it.
-        ///     …/TpNoteCSharp/Biblioteque/&lt;username&gt;
+        /// Retourne le chemin du dossier utilisateur WITHOUT creating it.
+        /// Exemple: …/TpNoteCSharp/Bibliotheque/&lt;username&gt;
         /// </summary>
+        /// <param name="username">Nom d'utilisateur brut.</param>
+        /// <returns>Chemin du dossier utilisateur (pas de création de dossier).</returns>
         public static string GetUserFolderPath(string username)
         {
             string user = Sanitize(username);
@@ -52,8 +63,10 @@ namespace App
         }
 
         /// <summary>
-        ///     Returns the path for the user folder and ensures it exists.
+        /// Retourne le chemin du dossier utilisateur en s'assurant qu'il existe (crée si besoin).
         /// </summary>
+        /// <param name="username">Nom d'utilisateur.</param>
+        /// <returns>Chemin du dossier utilisateur (créé si nécessaire).</returns>
         public static string GetUserFolder(string username)
         {
             string folder = GetUserFolderPath(username);
@@ -61,11 +74,20 @@ namespace App
             return folder;
         }
 
-        // NOTE: these path helpers now use the non-creating GetUserFolderPath
-        // so read/load operations do not cause creation of the folder.
+        /// <summary>
+        /// Chemin vers le profil utilisateur (user.xml) — n'induit pas la création du dossier.
+        /// </summary>
+        /// <param name="username">Nom d'utilisateur.</param>
+        /// <returns>Chemin complet du fichier de profil XML.</returns>
         public static string GetUserProfilePath(string username)
             => Path.Combine(GetUserFolderPath(username), "user.xml");
 
+        /// <summary>
+        /// Chemin vers le fichier livres de l'utilisateur (avec extension fournie) — n'induit pas la création du dossier.
+        /// </summary>
+        /// <param name="username">Nom d'utilisateur.</param>
+        /// <param name="extension">Extension (.xml ou .bin).</param>
+        /// <returns>Chemin complet du fichier livres.</returns>
         public static string GetUserBooksPath(string username, string extension /* .xml | .bin */)
             => Path.Combine(GetUserFolderPath(username), "livres" + extension);
     }
