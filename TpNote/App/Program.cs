@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Security.Principal;
 
 
 
@@ -56,6 +57,7 @@ namespace App
             }
         }
      
+        // Create user: prompt for key and allow retry on encryption error
         private static Utilisateur CreateUserFlow()
         {
             string u = Ask("Username : ");
@@ -66,13 +68,27 @@ namespace App
 
             var user = new Utilisateur(u, p, nom, prenom, email, DateTime.Now, new Livre[0]);
             var repo = new UserRepository(user.Username);
-            repo.SaveProfile(user);
 
-            Console.WriteLine($"Utilisateur '{user.Username}' créé et sauvegardé dans :");
-            Console.WriteLine("  " + PathManager.GetUserProfilePath(user.Username));
-            return user;
+            while (true)
+            {
+                string key = Ask("Encryption key (leave empty to use Windows SID): ");
+                try
+                {
+                    repo.SaveProfile(user, key);
+                    Console.WriteLine($"Utilisateur '{user.Username}' créé et sauvegardé dans :");
+                    Console.WriteLine("  " + PathManager.GetUserProfilePath(user.Username));
+                    return user;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Erreur lors de la sauvegarde chiffrée : " + ex.Message);
+                    var retry = Ask("Réessayer la sauvegarde avec une autre clé ? (o/n) : ");
+                    if (!string.Equals(retry, "o", StringComparison.OrdinalIgnoreCase)) throw;
+                }
+            }
         }
 
+        // Login: prompt key, on decryption failure propose retry
         private static bool LoginFlow(out UserRepository repo, out Utilisateur user, out string attemptedUser)
         {
             repo = null; user = null;
@@ -81,7 +97,31 @@ namespace App
             string p = Ask("Mot de passe : ");
 
             var r = new UserRepository(attemptedUser);
-            var existing = r.LoadProfile();
+
+            string key = Ask("Encryption key (leave empty to use Windows SID): ");
+            Utilisateur existing = null;
+            while (true)
+            {
+                try
+                {
+                    existing = r.LoadProfile(key);
+                    break;
+                }
+                catch (DecryptionException dex)
+                {
+                    Console.WriteLine("Erreur de décryptage : " + dex.Message);
+                    var retry = Ask("Réessayer avec une autre clé ? (o/n) : ");
+                    if (string.Equals(retry, "o", StringComparison.OrdinalIgnoreCase))
+                    {
+                        key = Ask("Encryption key: ");
+                        continue;
+                    }
+                    // user chose not to retry — treat as unknown
+                    existing = null;
+                    break;
+                }
+            }
+
             if (existing == null)
             {
                 Console.WriteLine("Utilisateur inconnu.");
@@ -119,28 +159,87 @@ namespace App
                         ListBooks(livres);
                         break;
 
+                    // Books submenu: handle load/save decryption errors with retry prompts
                     case "3":
-                        repo.SaveBooks(livres, SerializationFormat.Xml); 
-                        Console.WriteLine("Sauvegardé (XML) dans : " + 
-                            PathManager.GetUserBooksPath(username, ".xml"));
+                    {
+                        while (true)
+                        {
+                            string key = Ask("Encryption key for save (leave empty to use Windows SID): ");
+                            try
+                            {
+                                repo.SaveBooks(livres, SerializationFormat.Xml, key);
+                                Console.WriteLine("Sauvegardé (XML) dans : " + PathManager.GetUserBooksPath(username, ".xml"));
+                                break;
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine("Erreur lors de la sauvegarde chiffrée : " + ex.Message);
+                                var retry = Ask("Réessayer la sauvegarde ? (o/n) : ");
+                                if (!string.Equals(retry, "o", StringComparison.OrdinalIgnoreCase)) break;
+                            }
+                        }
                         break;
-
+                    }
                     case "4":
-                        livres = repo.LoadBooks(SerializationFormat.Xml); 
-                        Console.WriteLine($"Chargé (XML) : {livres.Count} livre(s).");
+                    {
+                        while (true)
+                        {
+                            string key = Ask("Encryption key for load (leave empty to use Windows SID): ");
+                            try
+                            {
+                                livres = repo.LoadBooks(SerializationFormat.Xml, key);
+                                Console.WriteLine($"Chargé (XML) : {livres.Count} livre(s).");
+                                break;
+                            }
+                            catch (DecryptionException dex)
+                            {
+                                Console.WriteLine("Erreur de décryptage : " + dex.Message);
+                                var retry = Ask("Réessayer avec une autre clé ? (o/n) : ");
+                                if (!string.Equals(retry, "o", StringComparison.OrdinalIgnoreCase)) break;
+                            }
+                        }
                         break;
-
+                    }
                     case "5":
-                        repo.SaveBooks(livres, SerializationFormat.Binary); 
-                        Console.WriteLine("Sauvegardé (BIN) dans : " + 
-                            PathManager.GetUserBooksPath(username, ".bin"));
+                    {
+                        while (true)
+                        {
+                            string key = Ask("Encryption key for save (leave empty to use Windows SID): ");
+                            try
+                            {
+                                repo.SaveBooks(livres, SerializationFormat.Binary, key);
+                                Console.WriteLine("Sauvegardé (BIN) dans : " + PathManager.GetUserBooksPath(username, ".bin"));
+                                break;
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine("Erreur lors de la sauvegarde chiffrée : " + ex.Message);
+                                var retry = Ask("Réessayer la sauvegarde ? (o/n) : ");
+                                if (!string.Equals(retry, "o", StringComparison.OrdinalIgnoreCase)) break;
+                            }
+                        }
                         break;
-
+                    }
                     case "6":
-                        livres = repo.LoadBooks(SerializationFormat.Binary); 
-                        Console.WriteLine($"Chargé (BIN) : {livres.Count} livre(s).");
+                    {
+                        while (true)
+                        {
+                            string key = Ask("Encryption key for load (leave empty to use Windows SID): ");
+                            try
+                            {
+                                livres = repo.LoadBooks(SerializationFormat.Binary, key);
+                                Console.WriteLine($"Chargé (BIN) : {livres.Count} livre(s).");
+                                break;
+                            }
+                            catch (DecryptionException dex)
+                            {
+                                Console.WriteLine("Erreur de décryptage : " + dex.Message);
+                                var retry = Ask("Réessayer avec une autre clé ? (o/n) : ");
+                                if (!string.Equals(retry, "o", StringComparison.OrdinalIgnoreCase)) break;
+                            }
+                        }
                         break;
-
+                    }
                     default:
                         Console.WriteLine("Choix inconnu.");
                         break;
