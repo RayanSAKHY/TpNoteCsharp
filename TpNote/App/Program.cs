@@ -92,7 +92,6 @@ namespace App
         private static bool LoginFlow(out UserRepository repo, out Utilisateur user, out string attemptedUser)
         {
             repo = null; user = null;
-            int nbEssai = 0;
             attemptedUser = Ask("Username : ");
             string p = Ask("Mot de passe : ");
 
@@ -293,6 +292,7 @@ namespace App
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Form1());
+            
         }
 
         public static void RunConsole()
