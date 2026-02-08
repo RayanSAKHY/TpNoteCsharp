@@ -15,7 +15,8 @@ namespace App
             while (dir != null)
             {
                 var sln = Array.Find(dir.GetFiles("*.sln"), _ => true);
-                if (sln != null) return dir.FullName;
+                var slnx = Array.Find(dir.GetFiles("*.slnx"), _ => true);
+                if (sln != null) return dir.Parent?.FullName;
                 dir = dir.Parent;
             }
             return AppDomain.CurrentDomain.BaseDirectory;
