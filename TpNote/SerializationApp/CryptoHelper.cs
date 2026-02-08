@@ -14,7 +14,13 @@ namespace SerializationApp
         private const int IvSizeBytes = 16;
         private const int Iterations = 100000;
 
-        // Returns effective password (use Windows SID when empty)
+        /// <summary>
+        /// Retourne le mot de passe effectif à utiliser.
+        /// Si <paramref name="password"/> est vide, on retourne le SID Windows courant en fallback.
+        /// Cette méthode protège l'appelant de la logique de fallback.
+        /// </summary>
+        /// <param name="password">Mot de passe saisi par l'utilisateur.</param>
+        /// <returns>Mot de passe effectif.</returns>
         public static string EffectivePassword(string password)
         {
             if (!string.IsNullOrEmpty(password)) return password;
