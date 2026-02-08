@@ -147,41 +147,15 @@ namespace App
             }
         }
 
-        private static void Main()
+        public static void RunGui() 
         {
-            //var diag = Diagnostics.TestUserFolderCreation("rayan", verbose: true);
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new Form1());
+        }
 
-            ILoggerFactory factory = null;
-            ILogger logger = null;
-
-            try
-            {
-                factory = LoggerFactory.Create(builder => builder.AddConsole());
-                logger = factory.CreateLogger("Program");
-                logger.LogInformation("Hello World! Logging is {Description}.", "fun");
-
-                Application.EnableVisualStyles();
-                Application.SetCompatibleTextRenderingDefault(false);
-
-                Livre livre = new Livre("Titre Exemple",
-                                        "Auteur Exemple",
-                                        new DateTime(2020, 1, 1),
-                                        1234567890,
-                                        "Science",
-                                        DateTime.Now);
-
-                if (logger != null)
-                    logger.LogInformation("Livre d'exemple: {Livre}", livre.ToString());
-
-                Application.Run(new Form1());
-            }
-            finally
-            {
-                if (factory != null)
-                    factory.Dispose();
-            }
-            Console.WriteLine("Racine des données : " + PathManager.GetLibraryRoot());
-
+        public static void RunConsole()
+        {
             while (true)
             {
                 Console.WriteLine("\n--- MENU ---");
@@ -211,7 +185,34 @@ namespace App
                         break;
                 }
             }
-            
+        }
+
+        private static void Main()
+        {
+            //var diag = Diagnostics.TestUserFolderCreation("rayan", verbose: true);
+
+            ILoggerFactory factory = factory = LoggerFactory.Create(builder => builder.AddConsole()); ;
+            ILogger logger = factory.CreateLogger("Program");
+            logger.LogInformation("Hello World! Logging is {Description}.", "fun");
+
+            Console.WriteLine("\n--- MENU ---");
+            Console.WriteLine("1) Interface graphique");
+            Console.WriteLine("2) Interface Console");
+            Console.Write("> Choix: ");
+            var c = Console.ReadLine();
+
+            switch (c)
+            {
+                case "1":
+                    RunGui();
+                    break;
+                case "2":
+                    RunConsole();
+                    break;
+                default:
+                    Console.WriteLine("Choix inconnu.");
+                    break;
+            }
         }
     }
 }
