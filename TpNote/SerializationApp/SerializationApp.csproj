@@ -45,8 +45,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BinarySerializeManager.cs" />
+    <Compile Include="CryptoHelper.cs" />
+    <Compile Include="DecryptionException.cs" />
+    <Compile Include="EncryptedBinarySerializer.cs" />
+    <Compile Include="EncryptedXmlSerializer.cs" />
     <Compile Include="ISerializer.cs" />
-    <Compile Include="SerializationFormat.cs.cs" />
+    <Compile Include="SerializationFormat.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SerializeFactory.cs" />
     <Compile Include="SingleXmlSerializer.cs" />
